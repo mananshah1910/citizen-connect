@@ -4,7 +4,7 @@ import './index.css'
 import App from './App.jsx'
 import {BrowserRouter, Route, Routes } from 'react-router-dom'
 import Home from './pages/homepage/Homepage.jsx'
-import AddService from './pages/addservice/addService.jsx'
+import AddService from './pages/addservice/AddService.jsx'
 import AdminLogin from './pages/login/Login.jsx'
 import AllService from './pages/service/service.jsx'
 
