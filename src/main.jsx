@@ -6,7 +6,7 @@ import {BrowserRouter, Route, Routes } from 'react-router-dom'
 import Home from './pages/homepage/Homepage.jsx'
 import AddService from './pages/addservice/AddService.jsx'
 import AdminLogin from './pages/login/Login.jsx'
-import AllService from './pages/service/service.jsx'
+import AllService from './pages/service/Service.jsx'
 
 
 
