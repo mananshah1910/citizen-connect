@@ -43,26 +43,10 @@ export default function AddService() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("services") || "null");
-    if (stored && stored.length) {
-      setServices(stored);
-    } else {
-      localStorage.setItem("services", JSON.stringify(defaultServices));
-      setServices(defaultServices);
-    }
-  }, []);
-
-  useEffect(() => {
     if (!isLoggedIn) {
       navigate("/login");
     }
   }, [isLoggedIn, navigate]);
-
-  useEffect(() => {
-    if (services.length) {
-      localStorage.setItem("services", JSON.stringify(services));
-    }
-  }, [services]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -99,7 +83,7 @@ export default function AddService() {
     });
   };
 
-  const handleAddService = (event) => {
+  const handleAddService = async (event) => {
     event.preventDefault();
     if (!form.name || !form.category || !form.address || !form.description) {
       setError("Please fill in all required fields marked with *");
@@ -107,7 +91,6 @@ export default function AddService() {
     }
 
     const newService = {
-      id: services.length > 0 ? Math.max(...services.map((s) => s.id)) + 1 : 1,
       name: form.name,
       category: form.category,
       status: form.status,
@@ -119,14 +102,28 @@ export default function AddService() {
       image: form.image || categoryImages[form.category] || ""
     };
 
-    const updatedServices = [...services, newService];
-    setServices(updatedServices);
-    setSuccess(true);
-    setError("");
-    clearForm();
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    try {
+      const res = await fetch('http://localhost:5001/api/services', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newService)
+      });
 
-    setTimeout(() => setSuccess(false), 4000);
+      if (res.ok) {
+        setSuccess(true);
+        setError("");
+        clearForm();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        setTimeout(() => setSuccess(false), 4000);
+      } else {
+        setError("Failed to add service. Please try again.");
+      }
+    } catch (error) {
+      console.error("Failed to add service:", error);
+      setError("Network error. Please try again.");
+    }
   };
 
   if (!isLoggedIn) {
