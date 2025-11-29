@@ -1,154 +1,157 @@
-import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useOutletContext } from "react-router-dom";
 import "./homepage.css";
 
+const features = [
+  {
+    icon: "hospital",
+    title: "Healthcare",
+    body: "Track nearby hospitals, clinics, and medical camps in real time."
+  },
+  {
+    icon: "shield-alt",
+    title: "Safety & Security",
+    body: "Locate police, fire, and emergency resources when every minute counts."
+  },
+  {
+    icon: "graduation-cap",
+    title: "Education",
+    body: "Discover schools, libraries, and skill hubs with verified details."
+  },
+  {
+    icon: "tools",
+    title: "Utilities",
+    body: "View water, power, and waste services with live status indicators."
+  },
+  {
+    icon: "bus",
+    title: "Mobility",
+    body: "Stay updated on buses, metro schedules, and last-mile options."
+  },
+  {
+    icon: "comments",
+    title: "Feedback & Complaints",
+    body: "Escalate issues, monitor responses, and keep agencies accountable."
+  }
+];
+
+const stats = [
+  { label: "Active services", value: "120+" },
+  { label: "Resolved complaints", value: "4.9k" },
+  { label: "Avg. response time", value: "2 hrs" },
+  { label: "City coverage", value: "24 wards" }
+];
+
+const quickActions = [
+  {
+    to: "/contact",
+    icon: "headset",
+    title: "Contact Support",
+    text: "Chat with civic helpdesk or schedule a callback."
+  },
+  {
+    to: "/complaints",
+    icon: "exclamation-circle",
+    title: "Raise Complaint",
+    text: "Report outages, safety concerns, or service delays."
+  },
+  {
+    to: "/services",
+    icon: "list-check",
+    title: "Browse Services",
+    text: "Filter city assets by sector, location, or availability."
+  }
+];
+
 export default function Home() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    // Check login state from localStorage
-    const loggedIn = localStorage.getItem("isLoggedIn") === "true";
-    setIsLoggedIn(loggedIn);
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem("isLoggedIn");
-    setIsLoggedIn(false);
-    navigate("/login");
-  };
+  const { isLoggedIn = false } = useOutletContext();
 
   return (
-    <>
-      {/* Header */}
-      <header className="header">
-        <div className="container">
-          <Link to="/" className="logo">
-            <img src="/src/assets/logo.jpeg" alt="Logo" style={{ width: "24px" }} />
-            CitizenConnect
+    <div className="home-page">
+      <section className="hero-panel container">
+        <div>
+          <p className="eyebrow">Smart city ops · Transparent governance</p>
+          <h1>
+            Citizen services in one beautiful, responsive control center.
+          </h1>
+          <p className="lede">
+            Discover critical infrastructure, request support, escalate
+            complaints, and collaborate with administrators—all without leaving
+            your dashboard.
+          </p>
+          <div className="cta-row">
+            <Link to="/services" className="btn primary">
+              Explore services
+            </Link>
+            <Link to={isLoggedIn ? "/add-service" : "/complaints"} className="btn ghost">
+              {isLoggedIn ? "Add service" : "Report an issue"}
+            </Link>
+          </div>
+        </div>
+        <div className="hero-card">
+          <div className="status-pill">
+            <span className="dot" /> Systems normal
+          </div>
+          <p className="hero-card-title">Live operations snapshot</p>
+          <ul>
+            <li>
+              <strong>Healthcare surge line</strong>
+              <span>Ready</span>
+            </li>
+            <li>
+              <strong>Flood helpline</strong>
+              <span>Monitoring</span>
+            </li>
+            <li>
+              <strong>Waste pickups</strong>
+              <span>On schedule</span>
+            </li>
+          </ul>
+          <Link to="/contact" className="card-link">
+            Talk to duty officer <i className="fas fa-arrow-right" />
           </Link>
-          <nav>
-            <ul className="nav-menu">
-              <li>
-                <Link to="/" className="active">Home</Link>
-              </li>
-              {!isLoggedIn && (
-                <li>
-                  <Link to="/login">Login</Link>
-                </li>
-              )}
-              <li>
-                <Link to="/service">All Services</Link>
-              </li>
-              {isLoggedIn && (
-                <li>
-                  <Link to="addservice">Add Service</Link>
-                </li>
-              )}
-            </ul>
-
-            {isLoggedIn && (
-              <div className="user-info">
-                <div className="user-avatar">
-                  <i className="fas fa-user"></i>
-                </div>
-                <span>Admin</span>
-                <button className="logout-btn" onClick={handleLogout}>
-                  <i className="fas fa-sign-out-alt"></i>
-                </button>
-              </div>
-            )}
-          </nav>
         </div>
-      </header>
+      </section>
 
-      {/* Main Content */}
-      <main className="page-content">
-        <div className="container">
-          {/* Hero Section */}
-          <div className="hero">
-            <h1>Welcome to CitizenConnect</h1>
-            <p>
-              Your one-stop solution for accessing city services, infrastructure
-              information, and public amenities
-            </p>
-            <div style={{ marginTop: "2rem" }}>
-              <Link to="/services" className="btn">
-                Explore Services
-              </Link>
-              {isLoggedIn ? (
-                <Link
-                  to="/addservice"
-                  className="btn btn-secondary"
-                  style={{ marginLeft: "1rem" }}
-                >
-                  Admin Dashboard
-                </Link>
-              ) : (
-                <Link
-                  to="/login"
-                  className="btn btn-secondary"
-                  style={{ marginLeft: "1rem" }}
-                >
-                  Admin Login
-                </Link>
-              )}
-            </div>
+      <section className="container stats-grid">
+        {stats.map((stat) => (
+          <div key={stat.label} className="stat-card">
+            <span>{stat.value}</span>
+            <p>{stat.label}</p>
           </div>
+        ))}
+      </section>
 
-          {/* Features Section */}
-          <div className="features">
-            <div className="feature-card">
-              <i className="fas fa-hospital"></i>
-              <h3>Healthcare Services</h3>
-              <p>
-                Find hospitals, clinics, and healthcare facilities with
-                real-time availability and contact information.
-              </p>
-            </div>
-            <div className="feature-card">
-              <i className="fas fa-shield-alt"></i>
-              <h3>Safety & Security</h3>
-              <p>
-                Access police stations, fire departments, and emergency services
-                for your safety and security needs.
-              </p>
-            </div>
-            <div className="feature-card">
-              <i className="fas fa-graduation-cap"></i>
-              <h3>Education</h3>
-              <p>
-                Discover schools, libraries, and educational institutions with
-                detailed information and ratings.
-              </p>
-            </div>
-            <div className="feature-card">
-              <i className="fas fa-tools"></i>
-              <h3>Public Utilities</h3>
-              <p>
-                Monitor water, electricity, and waste management services with
-                real-time status updates.
-              </p>
-            </div>
-            <div className="feature-card">
-              <i className="fas fa-bus"></i>
-              <h3>Transportation</h3>
-              <p>
-                Get information about public transport, road conditions, and
-                traffic management systems.
-              </p>
-            </div>
-            <div className="feature-card">
-              <i className="fas fa-comments"></i>
-              <h3>Feedback System</h3>
-              <p>
-                Report issues, provide feedback, and help improve city services
-                for everyone.
-              </p>
-            </div>
+      <section className="container feature-grid">
+        {features.map((feature) => (
+          <article key={feature.title} className="feature-panel">
+            <i className={`fas fa-${feature.icon}`} aria-hidden="true" />
+            <h3>{feature.title}</h3>
+            <p>{feature.body}</p>
+          </article>
+        ))}
+      </section>
+
+      <section className="container quick-actions">
+        <header>
+          <div>
+            <p className="eyebrow">Need assistance?</p>
+            <h2>Reach city teams in a tap</h2>
           </div>
+          <Link to="/contact" className="btn secondary">
+            Contact support
+          </Link>
+        </header>
+        <div className="action-grid">
+          {quickActions.map((action) => (
+            <Link key={action.title} to={action.to} className="action-card">
+              <i className={`fas fa-${action.icon}`} aria-hidden="true" />
+              <h3>{action.title}</h3>
+              <p>{action.text}</p>
+              <span>Open <i className="fas fa-arrow-up-right-from-square" /></span>
+            </Link>
+          ))}
         </div>
-      </main>
-    </>
+      </section>
+    </div>
   );
 }
