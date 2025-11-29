@@ -24,25 +24,27 @@ export default function Complaints() {
   const [status, setStatus] = useState("idle");
 
   useEffect(() => {
-    const loadData = () => {
-      const storedServices = JSON.parse(localStorage.getItem("services") || "null");
-      if (storedServices && storedServices.length) {
-        setServices(storedServices);
-      } else {
-        localStorage.setItem("services", JSON.stringify(defaultServices));
-        setServices(defaultServices);
-      }
+    const loadData = async () => {
+      try {
+        const servicesRes = await fetch('http://localhost:5001/api/services');
+        const servicesData = await servicesRes.json();
+        setServices(servicesData);
 
-      const storedComplaints = JSON.parse(localStorage.getItem("complaints") || "[]");
-      setComplaints(storedComplaints);
-      const storedUsers = JSON.parse(localStorage.getItem("users") || "[]");
-      setUsers(storedUsers);
+        const complaintsRes = await fetch('http://localhost:5001/api/complaints');
+        const complaintsData = await complaintsRes.json();
+        setComplaints(complaintsData);
+
+        // Users still from local storage for now as we didn't make a user API
+        const storedUsers = JSON.parse(localStorage.getItem("users") || "[]");
+        setUsers(storedUsers);
+      } catch (error) {
+        console.error("Failed to load data:", error);
+        // Fallback to default services if API fails? Or just show error?
+        // For now, let's just log it.
+      }
     };
 
     loadData();
-    const handler = () => loadData();
-    window.addEventListener("storage", handler);
-    return () => window.removeEventListener("storage", handler);
   }, []);
 
   useEffect(() => {
@@ -55,9 +57,7 @@ export default function Complaints() {
     }
   }, [currentUser]);
 
-  useEffect(() => {
-    localStorage.setItem("complaints", JSON.stringify(complaints));
-  }, [complaints]);
+  // Removed localStorage sync for complaints as we now persist to backend (in memory)
 
   const serviceLookup = useMemo(() => {
     return services.reduce((acc, service) => {
@@ -71,7 +71,7 @@ export default function Complaints() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (!form.serviceId || !form.name || !form.description) {
       setStatus("error");
@@ -86,15 +86,33 @@ export default function Complaints() {
       userId: currentUser?.id || null
     };
 
-    setComplaints((prev) => [newComplaint, ...prev]);
-    setForm({
-      serviceId: "",
-      name: currentUser?.name || "",
-      contact: currentUser?.email || "",
-      priority: "medium",
-      description: ""
-    });
-    setStatus("success");
+    try {
+      const res = await fetch('http://localhost:5001/api/complaints', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newComplaint)
+      });
+
+      if (res.ok) {
+        const savedComplaint = await res.json();
+        setComplaints((prev) => [savedComplaint, ...prev]);
+        setForm({
+          serviceId: "",
+          name: currentUser?.name || "",
+          contact: currentUser?.email || "",
+          priority: "medium",
+          description: ""
+        });
+        setStatus("success");
+      } else {
+        setStatus("error");
+      }
+    } catch (error) {
+      console.error("Failed to submit complaint:", error);
+      setStatus("error");
+    }
   };
 
   return (
@@ -234,4 +252,3 @@ export default function Complaints() {
     </div>
   );
 }
-
