@@ -47,20 +47,20 @@ export default function AllServices() {
   const [statusFilter, setStatusFilter] = useState("all");
 
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem("services") || "null");
-    if (saved && saved.length > 0) {
-      setServices(saved);
-    } else {
-      localStorage.setItem("services", JSON.stringify(defaultServices));
-      setServices(defaultServices);
-    }
+    const fetchServices = async () => {
+      try {
+        const res = await fetch('http://localhost:5001/api/services');
+        const data = await res.json();
+        setServices(data);
+      } catch (error) {
+        console.error("Failed to fetch services:", error);
+        // Fallback to default services if needed, or just leave empty
+      }
+    };
+    fetchServices();
   }, []);
 
-  useEffect(() => {
-    if (services.length > 0) {
-      localStorage.setItem("services", JSON.stringify(services));
-    }
-  }, [services]);
+  // Removed localStorage sync
 
   const filteredServices = useMemo(() => {
     return services.filter((service) => {
