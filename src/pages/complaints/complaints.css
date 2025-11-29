@@ -1,0 +1,100 @@
+.complaints-page .complaint-layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
+}
+
+.priority-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.priority-row .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.priority-row input {
+  accent-color: var(--accent);
+}
+
+.complaints-list header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.complaints-list ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.complaints-list li {
+  background: var(--surface-100);
+  border-radius: 1rem;
+  padding: 1rem 1.2rem;
+}
+
+.complaint-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.complaints-list p {
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.complaints-list .meta {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.complaints-list .meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.complaints-list .status-badge {
+  text-transform: capitalize;
+}
+
+.complaints-list .priority.low {
+  color: var(--success);
+}
+
+.complaints-list .priority.medium {
+  color: var(--accent);
+}
+
+.complaints-list .priority.high {
+  color: var(--danger);
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 2rem;
+}
+
+.empty-state i {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
