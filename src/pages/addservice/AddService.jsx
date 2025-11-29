@@ -1,9 +1,32 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useOutletContext } from "react-router-dom";
 import "./addservice.css";
+import defaultServices from "../../data/defaultServices";
+
+const categories = [
+  { value: "healthcare", label: "Healthcare" },
+  { value: "safety", label: "Safety & Security" },
+  { value: "education", label: "Education" },
+  { value: "utilities", label: "Utilities" },
+  { value: "transportation", label: "Transportation" }
+];
+
+const statuses = [
+  { value: "operational", label: "Operational" },
+  { value: "maintenance", label: "Under Maintenance" },
+  { value: "offline", label: "Offline" }
+];
+
+const categoryImages = {
+  healthcare: "https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&w=900&q=60",
+  safety: "https://images.unsplash.com/photo-1453873531674-2151bcd01707?auto=format&fit=crop&w=900&q=60",
+  education: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=900&q=60",
+  utilities: "https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=900&q=60",
+  transportation: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=900&q=60"
+};
 
 export default function AddService() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { isLoggedIn = false } = useOutletContext();
   const [services, setServices] = useState([]);
   const [form, setForm] = useState({
     name: "",
@@ -12,31 +35,57 @@ export default function AddService() {
     address: "",
     phone: "",
     hours: "",
-    description: ""
+    description: "",
+    image: ""
   });
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  // Load login state + services
   useEffect(() => {
-    const loggedIn = localStorage.getItem("isLoggedIn") === "true";
-    setIsLoggedIn(loggedIn);
+    const stored = JSON.parse(localStorage.getItem("services") || "null");
+    if (stored && stored.length) {
+      setServices(stored);
+    } else {
+      localStorage.setItem("services", JSON.stringify(defaultServices));
+      setServices(defaultServices);
+    }
+  }, []);
 
-    const storedServices = JSON.parse(localStorage.getItem("services")) || [];
-    setServices(storedServices);
-
-    if (!loggedIn) {
-      // redirect to login if not admin
+  useEffect(() => {
+    if (!isLoggedIn) {
       navigate("/login");
     }
-  }, [navigate]);
+  }, [isLoggedIn, navigate]);
 
-  // Handle form change
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  useEffect(() => {
+    if (services.length) {
+      localStorage.setItem("services", JSON.stringify(services));
+    }
+  }, [services]);
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Clear form
+  const handleImageChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setError("Please upload a valid image file.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setForm((prev) => ({ ...prev, image: reader.result }));
+      setError("");
+    };
+    reader.readAsDataURL(file);
+  };
+
   const clearForm = () => {
     setForm({
       name: "",
@@ -45,14 +94,15 @@ export default function AddService() {
       address: "",
       phone: "",
       hours: "",
-      description: ""
+      description: "",
+      image: ""
     });
   };
 
-  // Add service
-  const handleAddService = () => {
+  const handleAddService = (event) => {
+    event.preventDefault();
     if (!form.name || !form.category || !form.address || !form.description) {
-      alert("Please fill in all required fields marked with *");
+      setError("Please fill in all required fields marked with *");
       return;
     }
 
@@ -65,183 +115,169 @@ export default function AddService() {
       phone: form.phone,
       hours: form.hours || "Contact for hours",
       description: form.description,
-      rating: 0
+      rating: 0,
+      image: form.image || categoryImages[form.category] || ""
     };
 
     const updatedServices = [...services, newService];
     setServices(updatedServices);
-    localStorage.setItem("services", JSON.stringify(updatedServices));
-
     setSuccess(true);
+    setError("");
     clearForm();
-
-    setTimeout(() => setSuccess(false), 5000);
     window.scrollTo({ top: 0, behavior: "smooth" });
+
+    setTimeout(() => setSuccess(false), 4000);
   };
 
-  return (
-    <main className="page-content">
-      <div className="container">
-        <div className="add-service-form">
-          <h2 style={{ textAlign: "center", marginBottom: "2rem" }}>
-            <i className="fas fa-plus-circle" style={{ color: "#667eea", marginRight: "10px" }}></i>
-            Add New Service
-          </h2>
-
-          {/* Success Alert */}
-          {success && (
-            <div className="alert alert-success">
-              <i className="fas fa-check-circle" style={{ marginRight: "10px" }}></i>
-              Service added successfully!
-            </div>
-          )}
-
-          {/* Form */}
-          {isLoggedIn && (
-            <div>
-              <div className="form-group">
-                <label>Service Name *</label>
-                <input
-                  type="text"
-                  name="name"
-                  value={form.name}
-                  onChange={handleChange}
-                  className="form-control"
-                  placeholder="Enter service name"
-                  required
-                />
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Category *</label>
-                  <select
-                    name="category"
-                    value={form.category}
-                    onChange={handleChange}
-                    className="form-control"
-                    required
-                  >
-                    <option value="">Select Category</option>
-                    <option value="healthcare">Healthcare</option>
-                    <option value="safety">Safety & Security</option>
-                    <option value="education">Education</option>
-                    <option value="utilities">Utilities</option>
-                    <option value="transportation">Transportation</option>
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label>Status</label>
-                  <select
-                    name="status"
-                    value={form.status}
-                    onChange={handleChange}
-                    className="form-control"
-                  >
-                    <option value="operational">Operational</option>
-                    <option value="maintenance">Under Maintenance</option>
-                    <option value="offline">Offline</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label>Address *</label>
-                <input
-                  type="text"
-                  name="address"
-                  value={form.address}
-                  onChange={handleChange}
-                  className="form-control"
-                  placeholder="Enter full address"
-                  required
-                />
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Phone Number</label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={form.phone}
-                    onChange={handleChange}
-                    className="form-control"
-                    placeholder="+1-555-0000"
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Operating Hours</label>
-                  <input
-                    type="text"
-                    name="hours"
-                    value={form.hours}
-                    onChange={handleChange}
-                    className="form-control"
-                    placeholder="e.g., 9:00 AM - 5:00 PM"
-                  />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label>Description *</label>
-                <textarea
-                  name="description"
-                  value={form.description}
-                  onChange={handleChange}
-                  className="form-control"
-                  placeholder="Enter detailed service description"
-                  rows="4"
-                  required
-                />
-              </div>
-
-              <div style={{ display: "flex", gap: "1rem" }}>
-                <button onClick={handleAddService} className="btn" style={{ flex: 1 }}>
-                  <i className="fas fa-plus" style={{ marginRight: "8px" }}></i>
-                  Add Service
-                </button>
-                <button
-                  onClick={clearForm}
-                  className="btn"
-                  style={{ flex: 1, background: "#6c757d" }}
-                >
-                  <i className="fas fa-eraser" style={{ marginRight: "8px" }}></i>
-                  Clear Form
-                </button>
-              </div>
-
-              <div style={{ marginTop: "2rem", textAlign: "center" }}>
-                <Link to="/service" className="btn btn-secondary">
-                  <i className="fas fa-eye" style={{ marginRight: "8px" }}></i>
-                  View All Services
-                </Link>
-              </div>
-            </div>
-          )}
-
-          {!isLoggedIn && (
-            <div
-              className="alert"
-              style={{
-                background: "#f8d7da",
-                color: "#721c24",
-                borderColor: "#f5c6cb",
-                marginTop: "1rem"
-              }}
-            >
-              <i className="fas fa-exclamation-triangle" style={{ marginRight: "10px" }}></i>
-              Access denied. Please login as admin to add services.
-              <div style={{ marginTop: "10px" }}>
-                <Link to="/login" className="btn" style={{ padding: "8px 20px", fontSize: "0.9rem" }}>
-                  Login Here
-                </Link>
-              </div>
-            </div>
-          )}
+  if (!isLoggedIn) {
+    return (
+      <div className="container page-section">
+        <div className="card warning-card">
+          <i className="fas fa-lock" aria-hidden="true" />
+          <h2>Admin access only</h2>
+          <p>Please login as an administrator to add or update services.</p>
+          <Link to="/login" className="btn primary">
+            Go to login
+          </Link>
         </div>
       </div>
-    </main>
+    );
+  }
+
+  return (
+    <div className="container page-section add-service">
+      <header className="section-heading">
+        <div>
+          <p className="eyebrow">Operations · Admin</p>
+          <h1>Add a new city service</h1>
+          <p>Upload verified services with images so residents can trust the information they see.</p>
+        </div>
+        <Link to="/services" className="btn secondary">
+          View services
+        </Link>
+      </header>
+
+      {success && (
+        <div className="inline-alert success">
+          <i className="fas fa-check-circle" aria-hidden="true" />
+          Service added successfully
+        </div>
+      )}
+
+      {error && (
+        <div className="inline-alert danger">
+          <i className="fas fa-circle-exclamation" aria-hidden="true" />
+          {error}
+        </div>
+      )}
+
+      <form className="card form-card" onSubmit={handleAddService}>
+        <div className="form-grid two-col">
+          <label>
+            <span>Service name *</span>
+            <input
+              type="text"
+              name="name"
+              value={form.name}
+              onChange={handleChange}
+              placeholder="Eg. Central Immunization Center"
+              required
+            />
+          </label>
+          <label>
+            <span>Category *</span>
+            <select name="category" value={form.category} onChange={handleChange} required>
+              <option value="">Select category</option>
+              {categories.map((category) => (
+                <option key={category.value} value={category.value}>
+                  {category.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        <div className="form-grid two-col">
+          <label>
+            <span>Status</span>
+            <select name="status" value={form.status} onChange={handleChange}>
+              {statuses.map((status) => (
+                <option key={status.value} value={status.value}>
+                  {status.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span>Phone</span>
+            <input
+              type="tel"
+              name="phone"
+              value={form.phone}
+              onChange={handleChange}
+              placeholder="+1 555 000 0000"
+            />
+          </label>
+        </div>
+
+        <label>
+          <span>Address *</span>
+          <input
+            type="text"
+            name="address"
+            value={form.address}
+            onChange={handleChange}
+            placeholder="Full civic address"
+            required
+          />
+        </label>
+
+        <div className="form-grid two-col">
+          <label>
+            <span>Operating hours</span>
+            <input
+              type="text"
+              name="hours"
+              value={form.hours}
+              onChange={handleChange}
+              placeholder="Eg. 9:00 AM - 6:00 PM"
+            />
+          </label>
+          <label className="file-upload">
+            <span>Service image</span>
+            <input type="file" accept="image/*" onChange={handleImageChange} />
+            <p>JPG/PNG, up to 2MB</p>
+          </label>
+        </div>
+
+        {form.image && (
+          <div className="image-preview">
+            <img src={form.image} alt="Preview" />
+          </div>
+        )}
+
+        <label>
+          <span>Description *</span>
+          <textarea
+            name="description"
+            value={form.description}
+            onChange={handleChange}
+            rows="4"
+            placeholder="Share key facilities, entry requirements, or helplines."
+            required
+          />
+        </label>
+
+        <div className="form-actions">
+          <button type="button" className="btn ghost" onClick={clearForm}>
+            Clear
+          </button>
+          <button type="submit" className="btn primary">
+            <i className="fas fa-plus" aria-hidden="true" />
+            Publish service
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }
